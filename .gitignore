@@ -19,3 +19,6 @@ data/raw/*.pdf
 .DS_Store
 .idea/
 .vscode/
+
+# Extracted text is regenerated from the PDFs by src/extract_text.py
+data/processed/text/
