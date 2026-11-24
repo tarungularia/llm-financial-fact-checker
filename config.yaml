@@ -49,7 +49,8 @@ paths:
 fields:
   - fund_name
   - factsheet_date
-  - aum_cr
+  - aum_mn
+  - currency
   - nav
   - expense_ratio
   - return_1y
@@ -58,18 +59,21 @@ fields:
   - fund_manager
   - has_risk_disclaimer
 
-# Indian factsheets usually list several plans (Regular/Direct, Growth/IDCW) with
-# different NAVs, expense ratios and returns. Ground truth always uses this one,
-# so every number refers to the same plan.
-plan_convention: "Regular Plan - Growth option"
+# Global fund factsheets (UCITS, US, UK, Asia) are usually written for one share
+# class, but some list several with different NAVs, fees and returns. Ground truth
+# always uses this rule, so every number refers to the same share class.
+share_class_convention: >-
+  the share class the factsheet is written for (named on the first page);
+  if several are listed with equal weight, the first one shown
 
 # Tolerances used by checker_v2 (rule-based comparison).
 tolerances:
-  nav: 0.1                # absolute, in rupees
+  nav: 0.1                # absolute, in the fund's currency
   return_1y: 0.1          # absolute, in percentage points
   return_3y: 0.1
   expense_ratio: 0.01     # absolute, in percentage points
-  aum_cr_pct: 0.5         # relative, in % (AUM is often rounded in prose)
+  aum_mn_pct: 1.0         # relative, in % (AUM is often rounded in prose, e.g. 'USD 1.2bn')
+  currency: exact         # ISO code, e.g. USD, EUR, GBP, SGD
   dates: exact            # same month and year after normalisation
   names: normalised       # lowercase, strip punctuation and extra spaces
 

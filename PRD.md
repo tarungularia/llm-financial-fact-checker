@@ -3,14 +3,14 @@
 **Status:** Draft v1 · **Type:** Portfolio project (public data only)
 
 ## 1. User
-A **marketing or compliance reviewer at an asset manager**. They approve fund summaries for factsheets, websites and client emails before anything goes out. More and more of these summaries are drafted by an LLM.
+A **marketing or compliance reviewer at a global asset manager** (funds sold in several markets, e.g. UCITS funds in Europe and Asia). They approve fund summaries for factsheets, websites and client emails before anything goes out. More and more of these summaries are drafted by an LLM.
 
 ## 2. Problem
 AI-written fund summaries read well but can be wrong in ways that are easy to miss:
-- **Wrong numbers:** NAV, AUM, expense ratio or returns (e.g. 45.2% becomes 54.2%)
+- **Wrong numbers:** NAV, fund size (AUM), ongoing charges or returns (e.g. 45.2% becomes 54.2%), or the wrong currency
 - **Wrong dates:** the factsheet month or year
 - **Wrong names:** fund manager or benchmark
-- **Missing risk disclaimer:** the required "market risk" language is left out
+- **Missing risk disclaimer:** required risk language such as "past performance is not a guide to future returns" is left out
 - **Unsupported claims:** e.g. "guaranteed returns", which the source does not say
 
 Checking each figure against the source by hand is slow and repetitive, so mistakes get through. A wrong figure in client material is a regulatory and reputational risk.
@@ -48,11 +48,12 @@ Two designs are built and compared:
 - Legal or regulatory advice. The tool helps a reviewer; it does not replace one.
 - Live or real-time market data. Only the factsheet itself is the source of truth.
 - Non-English documents.
+- Converting between currencies. Each fund is checked in the currency its factsheet reports.
 - Charts and images inside PDFs (text only).
 - Any employer or client data. Public factsheets only.
 
 ## 7. Evaluation plan
-1. **Data:** ~30 public single-fund factsheets → extracted text → human-verified ground truth for 10 fields.
+1. **Data:** ~30 public single-fund factsheets → extracted text → human-verified ground truth for 11 fields (including currency, since funds report in USD, EUR, GBP, etc.). Only factsheets whose text extracts cleanly are used; garbled extractions are flagged and excluded.
 2. **Test set (~200 cases):** ~100 clean summaries (checked against ground truth) + ~100 with exactly one injected error, balanced across the 5 error types, generated deterministically with a fixed seed.
 3. **Runs:** v1 and v2 on the same test set. Temperature 0 where the model accepts it, and every response cached, so results can be reproduced at no extra cost.
 4. **Metrics:** confusion matrix, accuracy, missed-error rate, false-alarm rate, results by error type, invalid-output rate, cost and latency per document.
