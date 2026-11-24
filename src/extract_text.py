@@ -22,6 +22,12 @@ from src.llm_client import PROJECT_ROOT, load_config
 MIN_CHARS = 800          # a single-fund factsheet with less text than this is suspicious
 MIN_DIGIT_RATIO = 0.03   # factsheets are number-heavy; very few digits suggests a bad extraction
 MAX_CID_TOKENS = 20      # "(cid:123)" tokens mean the font could not be decoded
+MIN_COMMON_WORD_RATIO = 0.08  # readable English text has many of these words
+COMMON_WORDS = {
+    "the", "of", "and", "to", "in", "fund", "is", "for", "on", "as", "by", "with",
+    "are", "be", "or", "an", "at", "this", "that", "from", "investment", "returns",
+    "scheme", "risk", "date", "nav", "plan", "growth", "total", "market", "index",
+}
 
 
 def fund_id_from_filename(path: Path) -> str:
@@ -59,6 +65,11 @@ def quality_flags(text: str, page_count: int, empty_pages: int) -> list[str]:
     cid_count = len(re.findall(r"\(cid:\d+\)", body))
     if cid_count > MAX_CID_TOKENS:
         flags.append(f"undecoded_font({cid_count} cid tokens)")
+    words = re.findall(r"[a-z]+", body.lower())
+    if words:
+        common = sum(w in COMMON_WORDS for w in words) / len(words)
+        if common < MIN_COMMON_WORD_RATIO:
+            flags.append(f"garbled_text({common:.1%} common words) - font encoding not readable")
     if page_count > 4:
         flags.append(f"many_pages({page_count}) - may not be a single-fund factsheet")
     return flags
