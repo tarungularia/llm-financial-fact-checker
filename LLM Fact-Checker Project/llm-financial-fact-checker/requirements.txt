@@ -1,0 +1,15 @@
+# Core
+pdfplumber>=0.11
+pandas>=2.0
+pyyaml>=6.0
+python-dotenv>=1.0
+
+# LLM providers (Anthropic is the default; OpenAI is optional)
+anthropic>=0.70
+openai>=1.50
+
+# Analysis, demo and tests
+scipy>=1.11
+matplotlib>=3.8
+streamlit>=1.35
+pytest>=8.0
