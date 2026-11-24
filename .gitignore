@@ -1,0 +1,21 @@
+# Secrets - never commit
+.env
+
+# LLM response cache (regenerable, can be large)
+.cache/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# Raw factsheet PDFs: public, but re-downloadable and often large.
+# Remove this line if you want to commit them.
+data/raw/*.pdf
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,92 @@
+# Single source of configuration for the fact-checker.
+# Change the provider or model here only - no code changes needed.
+
+llm:
+  provider: anthropic            # anthropic | openai
+  temperature: 0                 # requested for every checker call (see note below)
+  max_tokens: 2000               # checker outputs are short JSON
+  timeout_seconds: 60
+  cache_dir: .cache/llm          # every response is cached here (git-ignored)
+  log_path: results/llm_calls.jsonl   # one line per call: tokens, cost, latency, cache hit
+
+  providers:
+    anthropic:
+      model: claude-haiku-5-5    # small, low-cost model
+      api_key_env: ANTHROPIC_API_KEY
+      # Claude Haiku 5.5 rejects non-default sampling parameters (temperature,
+      # top_p, top_k) with a 400 error, so temperature is NOT sent for this provider.
+      # Reproducibility comes from the disk cache instead: a re-run returns the
+      # exact saved response.
+      send_temperature: false
+      # Haiku 5.5 thinks by default. Turned off to keep calls cheap and fast;
+      # these are short extraction/comparison tasks. Set to true to compare.
+      thinking: false
+      # USD per 1M tokens (prompts <= 100K tokens). Verify at
+      # https://www.anthropic.com/pricing before quoting costs.
+      price_per_mtok:
+        input: 0.10
+        output: 0.50
+
+    openai:
+      model: gpt-4o-mini         # verify this is still offered and cheap before use
+      api_key_env: OPENAI_API_KEY
+      send_temperature: true
+      thinking: false            # not used for OpenAI
+      # USD per 1M tokens. Verify at https://openai.com/api/pricing before quoting costs.
+      price_per_mtok:
+        input: 0.15
+        output: 0.60
+
+paths:
+  raw_pdfs: data/raw
+  extracted_text: data/processed/text
+  ground_truth_draft: data/processed/ground_truth_draft.csv
+  ground_truth: data/processed/ground_truth.csv
+  test_cases: data/processed/test_cases.csv
+  results: results
+
+# Fields extracted from each factsheet and checked in each summary.
+fields:
+  - fund_name
+  - factsheet_date
+  - aum_cr
+  - nav
+  - expense_ratio
+  - return_1y
+  - return_3y
+  - benchmark
+  - fund_manager
+  - has_risk_disclaimer
+
+# Indian factsheets usually list several plans (Regular/Direct, Growth/IDCW) with
+# different NAVs, expense ratios and returns. Ground truth always uses this one,
+# so every number refers to the same plan.
+plan_convention: "Regular Plan - Growth option"
+
+# Tolerances used by checker_v2 (rule-based comparison).
+tolerances:
+  nav: 0.1                # absolute, in rupees
+  return_1y: 0.1          # absolute, in percentage points
+  return_3y: 0.1
+  expense_ratio: 0.01     # absolute, in percentage points
+  aum_cr_pct: 0.5         # relative, in % (AUM is often rounded in prose)
+  dates: exact            # same month and year after normalisation
+  names: normalised       # lowercase, strip punctuation and extra spaces
+
+# Human-review routing (Phase 6). The near-miss band is how close a value can
+# be to the tolerance edge before a human looks at it anyway.
+review_policy:
+  near_miss_multiplier: 3   # flag if |diff| is within tolerance * multiplier but not exact
+
+dataset:
+  random_seed: 42
+  clean_variants_per_fund: 3
+  error_types:
+    - wrong_number
+    - wrong_date
+    - wrong_entity
+    - missing_disclaimer
+    - unsupported_claim
+
+dry_run:
+  n_cases: 10               # rule 6: always dry-run on this many cases first
